@@ -1,0 +1,217 @@
+一、复杂度
+循环复杂度, 又叫McCabe度量. 当一个方法内的控制流有分支（splits）时，复杂度会增加1。每个函数的复杂度最少为1
+* 关键字增加复杂度: if, for, while, case, catch, throw, return (那些不是方法最后一条语句的return，例如下边例子中的第一个reutrn), &&, ||, ?
+* Notes:
+  * else, default, and finally 这些关键字不增加复杂度.
+  * 一个含有switch语句和一大堆case语句的方法会有惊人的复杂度（当使用if来表达这个switch语句时同样会产生相等值的复杂度）
+  * 访问函数（例如下边例子中while语句上边的两行）不被当作方法，所以不增加复杂度
+
+Example: 以下方法的复杂度为 5
+public void process(Car myCar){          // +1
+    if(myCar.isNotMine()){               // +1
+         return;                         // +1
+    }
+    car.paint("red");
+    car.changeWheel();
+    while(car.hasGazol() && car.getDriver().isNotStressed()){   // +2
+         car.drive();
+    }
+    return;
+}
+
+/方法 复杂度/方法的个数
+/类  复杂度/类的个数
+/文件 复杂度/文件的个数
+
+
+二、注释
+包括注释和注释掉的代码的行数
+不重要的注释行 (空注释行, 只含特殊字符的注释行等) 不增加注释行数.
+以下的代码包含9个注释行:
+/**                                    +0 => 空注释行
+ *                                     +0 => 空注释行
+ * This is my documentation            +1 => 重要注释行
+ * although I don't                    +1 => 重要注释行
+ * have much                           +1 => 重要注释行
+ * to say                              +1 => 重要注释行
+ *                                     +0 => 空注释行
+ ***************************           +0 => 不重要注释行
+ *                                     +0 => 空注释行
+ * blabla...                           +1 => 重要注释行
+ */                                    +0 => 空注释行
+ 
+/**                                    +0 => 空注释行
+ * public String foo() {               +1 => 注释掉的代码
+ *   System.out.println(message);      +1 => 注释掉的代码
+ *   return message;                   +1 => 注释掉的代码
+ * }                                   +1 => 注释掉的代码
+ */                                    +0 => 空注释行
+
+java中，文件标题不算做注释行（以为他们通常定义了许可信息）
+
+注释% = 注释行数 / （代码行数+注释行数） × 100
+通过这样一个规则，就有：
+50%意味着代码行数等于注释行数
+100%意味着文件只包含注释行
+公共编写了文档的API%（即sonar上的“文档”） = (公共API - 没有编写文档的API) / 公共API × 100
+  ·注」：
+     没有编写文档的API：没有“注释头”的那些公共API
+
+三、重复
+块：
+ 这些代码块儿会被当作重复代码块：
+ 非java工程:
+  * 100个以上连续重复的“标志位”（tokens）
+  * 以上那些“标志位”（tokens）至少分布在：
+     30行代码 COBOL
+     20行代码 ABAP
+     10行代码 其他语言 （分布指定行数以上的才算做重复代码块）
+ Java工程:
+  * 至少有10个连续重复的语句（无论是“标志位”还是行）
+  * 缩进和字符串常量不同依然会被当作是重复
+行：
+  涉及到重复的行数
+文件：
+  涉及到重复的文件
+
+重复% = 重复行 / 总行数 * 100
+
+四、问题严重级别
+ 阻断
+   运行/安全风险: 生产环境中，这种问题可能导致整个程序不稳定。例如：调用垃圾回收器，没有关闭socket等。
+ 严重
+   运行/安全风险: 生产环境中，这种问题可能在不影响整个程序完整性的情况下导致不可预测的行为。例如：空指针，不合理的异常捕捉，缺少单元测试等。
+ 主要
+   这种问题可能对生产产生一点微小的影响。例如：方法过于复杂，包循环等
+ 次要
+   这种问题可能对生产有潜在的、微小的影响。例如：命名方式，finalize（）方法中只是调用了父类的该方法等。
+ 信息
+   未知的，或者说对生产的影响还没有很好定义的问题
+
+五、代码行数等
+存取：getter和setter的数量
+类：类的数量（包括嵌套类、接口、枚举、注解）
+目录：目录的数量
+文件：文件的数量
+行数：物理上的行数（回车的数量）
+代码行数：那些至少有一个字符（非空格，tab或者注释的一部分）的行的数量
+公共API：public类型的[类, 接口, 方法, 构造器, 注解 和 属性]的数量和
+  不包含以下项:
+    * static final 类型的属性
+    * 带有 @Override 注解的方法
+    * 无参构造器
+    * 存取(getters and setters) 如果"sonar.squid.analyse.property.accessors"属性设置成"true" (默认值)
+方法：函数的数量。
+  如果“sonar.squid.analyse.property.accessors”属性设置为false，存取器会被当作方法；
+  构造器被当作方法
+语句：
+ java：语句（不包括语句块内语句）的数量。
+  * 每当遇到以下关键字时，计数器+1：
+    if, else, while, do, for, switch, break, continue, return, throw, synchronized, catch, finally.
+  * 以下情况计数器不会+1：
+    类，方法，属性，注解的声明；
+    包声明；
+    import声明
+ PL/SQL：只包括那些在PL/SQL块内部的SQL语句，不包括外部的
+
+六、包信息
+ 循环（文件之间）：一个包内被检测到的文件循环依赖的最小数目；以便于确定所有不需要的依赖。
+ File edges weight：包内文件依赖的总数
+ 切断的依赖（文件之间）：可以去除文件依赖的数量，以便于去除所有文件之间所有的循环依赖
+ File tangle = 可以的文件依赖数
+ File tangle index
+     2 * (file_tangles / file_edges_weight) * 100.
+ 循环（包之间）：包循环依赖的数量，以便于确定所有不需要的依赖
+ 切断的依赖（包之间）：可以去除文件依赖的数量，以便于去除所有文件之间所有的循环依赖
+ 包耦合指数：
+    给出包的复杂等级，最好的值为0%，意味着没有一个循环依赖；最坏的值为100%，意味着包与包之间存在大量的循环依赖。
+    该指数计算方式：2 * (package_tangles /      package_edges_weight) 
+ Package edges weight  包之间的文件依赖总数
+ Suspect file dependencies：可去除的文件依赖数，以去除包内文件之间的循环依赖。警告：包内文件的循环依赖不一定是不好的。
+七、单元测试
+条件覆盖率（Condition coverage）
+  在每一行含有boolean表达式的代码中，条件覆盖率简单地回答了下列问题：“每一个boolean表达式的值都出现过true和false的情况吗？”
+  这是在单元测试执行过程中遵循的流程控制结构中可能的情况所占的比率
+  Condition coverage = (CT + CF) / (2*B) 其中，
+    CT = 至少一次为“true”的那些情况（conditions that have been evaluated to 'true' at least once）
+    CF = 至少一次为“false”的那些情况（conditions that have been evaluated to 'false' at least once）
+    B = 条件的总量（total number of conditions）
+
+新代码的条件覆盖率（Condition coverage on new code）
+  新更新代码的“条件覆盖率”
+
+覆盖到的条件：
+  覆盖到的条件的列表
+
+按行分的条件（Conditions by line）
+按行分的条件的数量（Number of conditions by line.）
+
+按行分的覆盖到的条件（Covered conditions by line）
+按行分的覆盖到的条件的数量（Number of covered conditions by line.）
+
+覆盖率：
+  行覆盖率与条件覆盖率的混合. 目的是为了更准确地回答以下问题: 单元测试过程中覆盖到了多少源代码？
+  覆盖率 = (CT + CF + LC)/(2*B + EL)，其中： 
+    CT = 至少一次为“true”的那些情况（conditions that have been evaluated to 'true' at least once）
+    CF = 至少一次为“false”的那些情况（conditions that have been evaluated to 'false' at least once）
+    LC = 覆盖到的行 = 要覆盖的行 - 未覆盖到的行
+ 
+    B = 条件的总数
+    EL = 所有可执行的行的数量(要覆盖的行)
+
+新代码覆盖率
+    新更新的代码的”覆盖率“（同上）
+
+行覆盖率：
+  给定一行代码，行覆盖率简单回答了以下问题：在单元测试中，这行代码被执行了吗？是单元测试中覆盖到的行的比率：
+  行覆盖率 = LC / EL  其中， 
+    LC = 覆盖到了的行数(要覆盖的行数 - 未覆盖到的行数)
+    EL = 总的可执行的行数量 (要覆盖的行数)
+
+新代码行覆盖率：
+  新更新代码的“行覆盖率”
+
+覆盖到的行：
+  覆盖到的行的列表
+
+要覆盖的行：
+  能够被单元测试覆盖到的行数（例如，空行或者注释行不被看作要覆盖的行）
+
+新代码要覆盖的行：
+  新更新代码中能够被单元测试覆盖到的行数
+
+跳过的单元测试：
+  被跳过的单元测试的数量
+
+未覆盖到的条件：
+  单元测试没有覆盖到的条件
+
+新代码未覆盖到的条件：
+  新更新代码中单元测试没有覆盖到的条件
+
+未覆盖到的行：
+  单元测试没有覆盖到的行数
+
+新代码未覆盖到的行：
+  新更新代码中单元测试没有覆盖到的行数
+
+单元测试：
+  单元测试的数量
+
+单元测试时间
+  执行所有单元测试所需的时间
+
+错误：
+  单元测试失败的数量
+  （Number of unit tests that have failed.）
+
+失败：
+  有未期望异常的失败的单元测试
+  （Number of unit tests that have failed with an unexpected exception.）
+
+单元测试成功率 (%)：
+单元测试成功率 = (单元测试 - (错误 + 失败)) / 单元测试 * 100
+
+八、技术负债
+技术负债的运行基于SQALE（基于生命周期期望的软件质量模型）方法学。SQALE是关于 “组织与代码质量有关的非功能性的需求”。
+在sonarqube对SQALE方法的实现中，“非功能需求”指的是“质量配置”中设定的代码规则
